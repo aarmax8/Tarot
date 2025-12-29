@@ -3,6 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <title>Tarot Oracle</title>
     <style>
         :root {
@@ -11,6 +13,7 @@
             --blue: #007aff;
             --gold: #ffd700;
             --gray: #8e8e93;
+            --indigo: #5856d6;
         }
 
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -18,7 +21,7 @@
         body {
             background-color: var(--bg);
             color: #ffffff;
-            font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif;
             margin: 0;
             padding: 0;
             overflow: hidden;
@@ -31,7 +34,7 @@
             border-bottom: 0.5px solid rgba(255, 255, 255, 0.1);
             padding: 60px 20px 15px 20px; text-align: center;
         }
-        header h1 { margin: 0; font-size: 17px; font-weight: 700; letter-spacing: 1px; }
+        header h1 { margin: 0; font-size: 15px; font-weight: 700; letter-spacing: 2px; color: var(--gold); }
 
         nav {
             position: fixed; bottom: 0; width: 100%; z-index: 100;
@@ -41,94 +44,137 @@
             display: flex; justify-content: space-around;
             padding: 10px 10px 35px 10px;
         }
-        .tab { display: flex; flex-direction: column; align-items: center; color: var(--gray); font-size: 10px; font-weight: 600; cursor: pointer; }
-        .tab.active { color: var(--blue); }
-        .tab-icon { font-size: 24px; margin-bottom: 4px; }
 
-        /* View Control */
-        .view { display: none; height: 100vh; overflow-y: auto; padding: 120px 20px 150px 20px; -webkit-overflow-scrolling: touch; }
-        
-        /* HOME IS FORCED VISIBLE BY DEFAULT */
-        #view-home { display: block; }
-
-        .hero { text-align: center; padding-top: 40px; }
-        .orb { 
-            width: 90px; height: 90px; background: linear-gradient(135deg, #f59e0b, #d97706); 
-            border-radius: 22px; margin: 0 auto 30px auto; font-size: 50px; line-height: 90px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        .view {
+            display: none;
+            height: 100vh;
+            overflow-y: auto;
+            padding: 110px 15px 150px 15px;
+            -webkit-overflow-scrolling: touch;
         }
+        .view.active { display: block; animation: fadeIn 0.4s ease-out; }
+
+        .tab { display: flex; flex-direction: column; align-items: center; color: var(--gray); font-size: 10px; font-weight: 600; cursor: pointer; transition: color 0.2s; }
+        .tab.active { color: var(--gold); }
+        .tab-icon { font-size: 20px; margin-bottom: 4px; }
+
         .btn {
             background: var(--blue); color: white; border: none; width: 100%; max-width: 320px;
-            height: 54px; border-radius: 14px; font-size: 18px; font-weight: 700;
-            margin-top: 20px; cursor: pointer;
+            height: 54px; border-radius: 14px; font-size: 17px; font-weight: 700;
+            margin-top: 20px; cursor: pointer; transition: opacity 0.2s, transform 0.1s;
         }
-        .btn:active { opacity: 0.5; }
+        .btn:active { opacity: 0.5; transform: scale(0.98); }
 
-        .slot { margin-bottom: 40px; text-align: center; }
-        .slot-title { font-size: 11px; font-weight: 900; color: var(--gold); text-transform: uppercase; letter-spacing: 2px; margin-bottom: 15px; }
+        .hero { text-align: center; padding-top: 20px; }
+        .orb { 
+            width: 90px; height: 90px; background: linear-gradient(135deg, #5856d6, #af52de); border-radius: 25px; 
+            margin: 0 auto 30px auto; font-size: 44px; line-height: 90px;
+            box-shadow: 0 10px 30px rgba(88, 86, 214, 0.4);
+        }
+
+        .spread-row {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            width: 100%;
+            margin-bottom: 25px;
+        }
+
+        .slot { flex: 1; text-align: center; min-width: 0; }
+        .slot-title { font-size: 9px; font-weight: 800; color: var(--gray); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px; }
+        
         .tarot-card {
-            width: 190px; height: 300px; background: linear-gradient(145deg, #2c2c2e, #1c1c1e);
-            border-radius: 20px; border: 1px solid rgba(255,255,255,0.1); margin: 0 auto;
+            width: 100%; aspect-ratio: 2/3; background: linear-gradient(145deg, #2c2c2e, #1c1c1e); 
+            border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); margin: 0 auto;
             display: flex; flex-direction: column; align-items: center; justify-content: center;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.6);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.4);
+            overflow: hidden;
+            position: relative;
         }
         .tarot-card.rev { transform: rotate(180deg); }
-        .card-emoji { font-size: 70px; margin-bottom: 15px; }
-        .card-name { font-size: 18px; font-weight: 800; color: var(--gold); }
-        .meaning-text { color: var(--gray); font-size: 15px; margin-top: 20px; font-style: italic; line-height: 1.4; padding: 0 20px; }
-
-        #modal { position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 200; display: none; align-items: flex-end; }
-        .sheet {
-            background: var(--card); width: 100%; border-radius: 25px 25px 0 0;
-            padding: 20px 20px 60px 20px; text-align: center;
-            transform: translateY(100%); transition: transform 0.4s cubic-bezier(0, 1, 0, 1);
+        .card-emoji { font-size: 32px; margin-bottom: 8px; }
+        .card-name { font-size: 11px; font-weight: 700; color: var(--gold); padding: 0 4px; line-height: 1.1; }
+        
+        .outcome-box {
+            background: rgba(255, 255, 255, 0.03);
+            border-left: 3px solid var(--gold);
+            border-radius: 4px 16px 16px 4px;
+            padding: 20px;
+            margin-top: 5px;
+            text-align: left;
+            animation: fadeIn 0.8s ease-out;
         }
-        .sheet.up { transform: translateY(0); }
-        .handle { width: 40px; height: 5px; background: #333; border-radius: 3px; margin: 0 auto 20px auto; }
+        .outcome-title { font-size: 11px; font-weight: 800; color: var(--gold); text-transform: uppercase; margin-bottom: 10px; display: flex; align-items: center; gap: 8px; }
+        .outcome-text { font-size: 15px; color: #f0f0f0; line-height: 1.6; font-weight: 300; }
+        .energy-pills { display: flex; gap: 6px; margin-bottom: 15px; flex-wrap: wrap; }
+        .pill { font-size: 9px; padding: 4px 10px; border-radius: 20px; background: #333; color: #fff; font-weight: 700; text-transform: uppercase; }
+
+        #modal {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 200;
+            display: none; align-items: flex-end;
+        }
+        .sheet {
+            background: #1c1c1e; width: 100%; border-radius: 25px 25px 0 0;
+            padding: 20px 20px 60px 20px; text-align: center;
+            transform: translateY(100%); transition: transform 0.4s cubic-bezier(0.1, 0.9, 0.2, 1);
+        }
+        .sheet.open { transform: translateY(0); }
+        .handle { width: 36px; height: 5px; background: #333; border-radius: 3px; margin: 0 auto 20px auto; }
+
+        .zodiac-tag {
+            display: inline-block;
+            padding: 4px 12px;
+            background: rgba(88, 86, 214, 0.2);
+            border: 1px solid rgba(88, 86, 214, 0.3);
+            border-radius: 20px;
+            font-size: 10px;
+            font-weight: 700;
+            color: #af52de;
+            margin-top: 8px;
+            text-transform: uppercase;
+        }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
 <body>
 
-    <header><h1>TAROT ORACLE</h1></header>
+    <header><h1>THE GREAT ORACLE</h1></header>
 
-    <!-- HOME VIEW -->
     <div id="view-home" class="view">
         <div class="hero">
-            <div class="orb">🔮</div>
-            <h2 style="font-size: 34px; font-weight: 800; margin: 0 0 10px 0; letter-spacing: -1px;">Divine Guidance</h2>
-            <p style="color: var(--gray); font-size: 17px; margin-bottom: 40px; line-height: 1.3;">Seek clarity in the cards. The universe is ready to speak.</p>
-            <button class="btn" onclick="oracle.draw()">Begin Reading</button>
+            <div class="orb">👁️</div>
+            <h2 style="font-size: 34px; font-weight: 800; margin: 0 0 10px 0; letter-spacing: -1.5px;">Divine Guidance</h2>
+            <p style="color: var(--gray); font-size: 17px; margin-bottom: 40px; padding: 0 20px; line-height: 1.3;">A 78-card professional reading. Understand the celestial influence on your journey.</p>
+            <button class="btn" onclick="oracle.draw()">Draw 3 Cards</button>
         </div>
     </div>
 
-    <!-- READING VIEW -->
     <div id="view-reading" class="view">
         <div id="reading-display"></div>
-        <div style="text-align: center;"><button class="btn" style="background: #2c2c2e;" onclick="oracle.draw()">New Spread</button></div>
+        <div id="reading-outcome"></div>
+        <div style="text-align: center;"><button class="btn" style="background: #2c2c2e; margin-top: 30px;" onclick="oracle.draw()">Redraw Spread</button></div>
     </div>
 
-    <!-- LIBRARY VIEW -->
     <div id="view-deck" class="view">
-        <div id="library-grid" style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px;"></div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px;" id="deck-grid"></div>
     </div>
 
-    <!-- TAB BAR -->
     <nav>
-        <div class="tab active" id="tab-home" onclick="oracle.nav('home')">
-            <span class="tab-icon">✨</span>
+        <div class="tab" id="tab-home" onclick="oracle.nav('home')">
+            <span class="tab-icon">✦</span>
             <span>Home</span>
         </div>
         <div class="tab" id="tab-reading" onclick="oracle.nav('reading')">
-            <span class="tab-icon">🔮</span>
+            <span class="tab-icon">🎴</span>
             <span>Reading</span>
         </div>
         <div class="tab" id="tab-deck" onclick="oracle.nav('deck')">
             <span class="tab-icon">📖</span>
-            <span>Library</span>
+            <span>Deck</span>
         </div>
     </nav>
 
-    <!-- MODAL -->
     <div id="modal" onclick="oracle.close()">
         <div class="sheet" id="sheet" onclick="event.stopPropagation()">
             <div class="handle"></div>
@@ -138,31 +184,59 @@
     </div>
 
     <script>
-        const CARDS = [
-            { n: "The Fool", i: "🃏", u: "New beginnings, optimism, trust.", r: "Recklessness, unnecessary risks." },
-            { n: "Magician", i: "🪄", u: "Manifestation, power, skill.", r: "Manipulation, poor planning." },
-            { n: "Priestess", i: "🌙", u: "Intuition, sacred knowledge.", r: "Secrets, hidden motives." },
-            { n: "Empress", i: "🌿", u: "Nature, abundance, growth.", r: "Creative block, dependence." },
-            { n: "Emperor", i: "👑", u: "Authority, structure, foundation.", r: "Domination, rigidity." },
-            { n: "Hierophant", i: "🏛️", u: "Tradition, spiritual wisdom.", r: "New beliefs, rebellion." },
-            { n: "Lovers", i: "❤️", u: "Love, harmony, choices.", r: "Self-love, disharmony." },
-            { n: "Chariot", i: "⚔️", u: "Direction, control, victory.", r: "Aggression, lack of will." },
-            { n: "Strength", i: "🦁", u: "Courage, persuasion, influence.", r: "Self-doubt, low energy." },
-            { n: "Hermit", i: "🏮", u: "Introspection, soul-searching.", r: "Isolation, withdrawal." },
-            { id: 10, n: "Wheel", i: "🎡", u: "Good luck, destiny, cycles.", r: "Bad luck, resistance." },
-            { id: 11, n: "Justice", i: "⚖️", u: "Truth, fairness, law.", r: "Unfairness, dishonesty." },
-            { id: 12, n: "Death", i: "💀", u: "Endings, transformation.", r: "Resistance to change." },
-            { id: 13, n: "Sun", i: "☀️", u: "Positivity, fun, warmth.", r: "Inner child, sadness." },
-            { id: 14, n: "World", i: "🌍", u: "Completion, travel.", r: "Seeking closure." }
+        const MAJOR_ARCANA = [
+            { n: "The Fool", i: "🃏", z: "Uranus", e: "Air", u: "New beginnings, optimism, trust.", r: "Recklessness, unnecessary risks." },
+            { n: "Magician", i: "🪄", z: "Mercury", e: "Air", u: "Manifestation, power, skill.", r: "Manipulation, poor planning." },
+            { n: "Priestess", i: "🌙", z: "Moon", e: "Water", u: "Intuition, sacred knowledge.", r: "Secrets, hidden motives." },
+            { n: "Empress", i: "🌿", z: "Venus", e: "Earth", u: "Nature, abundance, growth.", r: "Creative block, dependence." },
+            { n: "Emperor", i: "👑", z: "Aries", e: "Fire", u: "Authority, structure, foundation.", r: "Domination, rigidity." },
+            { n: "Hierophant", i: "🏛️", z: "Taurus", e: "Earth", u: "Tradition, spiritual wisdom.", r: "New beliefs, rebellion." },
+            { n: "Lovers", i: "❤️", z: "Gemini", e: "Air", u: "Love, harmony, choices.", r: "Self-love, disharmony." },
+            { n: "Chariot", i: "⚔️", z: "Cancer", e: "Water", u: "Direction, control, victory.", r: "Aggression, lack of will." },
+            { n: "Strength", i: "🦁", z: "Leo", e: "Fire", u: "Courage, persuasion, influence.", r: "Self-doubt, low energy." },
+            { n: "Hermit", i: "🏮", z: "Virgo", e: "Earth", u: "Introspection, soul-searching.", r: "Isolation, withdrawal." },
+            { n: "Wheel", i: "🎡", z: "Jupiter", e: "Fire", u: "Good luck, destiny, cycles.", r: "Bad luck, resistance." },
+            { n: "Justice", i: "⚖️", z: "Libra", e: "Air", u: "Truth, fairness, law.", r: "Unfairness, dishonesty." },
+            { n: "Hanged Man", i: "👣", z: "Neptune", e: "Water", u: "Pause, surrender, perspective.", r: "Stalling, resistance." },
+            { n: "Death", i: "💀", z: "Scorpio", e: "Water", u: "Endings, transformation.", r: "Resistance to change." },
+            { n: "Temperance", i: "🍷", z: "Sagittarius", e: "Fire", u: "Balance, moderation, patience.", r: "Imbalance, excess." },
+            { n: "The Devil", i: "🔥", z: "Capricorn", e: "Earth", u: "Shadow self, attachment.", r: "Detachment, release." },
+            { n: "The Tower", i: "⚡", z: "Mars", e: "Fire", u: "Sudden upheaval.", r: "Averting disaster." },
+            { n: "The Star", i: "✨", z: "Aquarius", e: "Air", u: "Hope, renewal.", r: "Despair, lack of faith." },
+            { n: "The Moon", i: "🌒", z: "Pisces", e: "Water", u: "Fear, subconscious.", r: "Release of fear." },
+            { n: "The Sun", i: "☀️", z: "Sun", e: "Fire", u: "Positivity, fun, warmth.", r: "Inner child, sadness." },
+            { n: "Judgement", i: "🎺", z: "Pluto", e: "Fire/Water", u: "Rebirth, calling.", r: "Self-doubt, doubt." },
+            { n: "The World", i: "🌍", z: "Saturn", e: "Earth", u: "Completion, travel.", r: "Seeking closure." }
         ];
+
+        const SUITS = [
+            { name: "Wands", i: "🔥", e: "Fire", z: "Leo/Sag" },
+            { name: "Cups", i: "💧", e: "Water", z: "Pisces/Scorp" },
+            { name: "Swords", i: "💨", e: "Air", z: "Aqua/Gemini" },
+            { name: "Pentacles", i: "⛰️", e: "Earth", z: "Cap/Taurus" }
+        ];
+
+        const RANKS = ["Ace", "2", "3", "4", "5", "6", "7", "8", "9", "10", "Page", "Knight", "Queen", "King"];
+
+        const DECK = [...MAJOR_ARCANA];
+        SUITS.forEach(suit => {
+            RANKS.forEach(rank => {
+                DECK.push({
+                    n: `${rank} of ${suit.name}`,
+                    i: suit.i,
+                    z: suit.z,
+                    e: suit.e,
+                    u: `${rank} of ${suit.name} represents ${suit.e} energy in its ${rank} phase. Focused on ${suit.name.toLowerCase()}.`,
+                    r: `Reversed ${rank} of ${suit.name} suggests blocked or internal ${suit.name.toLowerCase()} matters.`
+                });
+            });
+        });
 
         const oracle = {
             nav(id) {
-                // Remove active classes
                 document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
                 document.querySelectorAll('.view').forEach(v => v.style.display = 'none');
                 
-                // Add active classes
                 const tab = document.getElementById('tab-' + id);
                 const view = document.getElementById('view-' + id);
                 if (tab) tab.classList.add('active');
@@ -170,55 +244,121 @@
 
                 if(id === 'deck') this.renderLibrary();
             },
+
             draw() {
                 const display = document.getElementById('reading-display');
-                const spread = [...CARDS].sort(() => Math.random() - 0.5).slice(0, 3);
-                display.innerHTML = spread.map((c, idx) => {
-                    const isRev = Math.random() > 0.7;
-                    return `
-                        <div class="slot">
-                            <div class="slot-title">${['Past', 'Present', 'Future'][idx]}</div>
-                            <div class="tarot-card ${isRev ? 'rev' : ''}" onclick="oracle.open('${c.n}','${c.i}','${c.u}','${c.r}',${isRev})">
-                                <div class="card-emoji">${c.i}</div>
-                                <div class="card-name">${c.n}</div>
-                            </div>
-                            <div class="meaning-text">"${isRev ? c.r : c.u}"</div>
+                const outcome = document.getElementById('reading-outcome');
+                const spreadData = [...DECK].sort(() => Math.random() - 0.5).slice(0, 3);
+                
+                const spread = spreadData.map(c => ({
+                    ...c,
+                    isRev: Math.random() > 0.5
+                }));
+                
+                display.innerHTML = `<div class="spread-row">` + spread.map((c, idx) => `
+                    <div class="slot">
+                        <div class="slot-title">${['Past', 'Present', 'Future'][idx]}</div>
+                        <div class="tarot-card ${c.isRev ? 'rev' : ''}" onclick="oracle.open('${c.n}', '${c.i}', '${c.u.replace(/'/g, "\\'")}', '${c.r.replace(/'/g, "\\'")}', ${c.isRev}, '${c.z}')">
+                            <div class="card-emoji">${c.i}</div>
+                            <div class="card-name">${c.n}</div>
                         </div>
-                    `;
-                }).join('');
+                    </div>
+                `).join('') + `</div>`;
+
+                // Comprehensive Summary Logic
+                const elements = spread.map(c => c.e);
+                const signs = spread.map(c => c.z);
+                const revs = spread.filter(c => c.isRev).length;
+
+                const counts = elements.reduce((acc, el) => { acc[el] = (acc[el] || 0) + 1; return acc; }, {});
+                const dominantEl = Object.keys(counts).reduce((a, b) => counts[a] > counts[b] ? a : b);
+
+                let interpretation = "";
+                
+                // Element-based opening
+                if (counts[dominantEl] >= 2) {
+                    const themes = {
+                        "Fire": "an intense surge of creative energy and ambition",
+                        "Water": "a deep period of emotional processing and intuitive growth",
+                        "Air": "a focus on intellectual clarity, communication, and swift change",
+                        "Earth": "a grounding phase centered on physical security and tangible results"
+                    };
+                    interpretation += `Your current path is dominated by the element of ${dominantEl}, suggesting ${themes[dominantEl]}. `;
+                } else {
+                    interpretation += `Your reading contains a diverse mix of elemental energies, indicating a complex transition where emotions, ideas, and actions are all equally at play. `;
+                }
+
+                // Zodiac/Planetary specific notes
+                interpretation += `The transition from the ${signs[0]} influence in your past to the ${signs[1]} energy in your present shows `;
+                
+                if (spread[1].isRev) {
+                    interpretation += `that you are currently wrestling with an internal block or a delayed manifestation of your goals. `;
+                } else {
+                    interpretation += `that you are successfully integrating your experiences into your current reality. `;
+                }
+
+                interpretation += `Looking ahead, the ${spread[2].n} (${signs[2]}) indicates that your future holds `;
+                
+                if (spread[2].isRev) {
+                    interpretation += `a need for caution and internal reflection before the final outcome of this situation is revealed.`;
+                } else {
+                    interpretation += `a significant ${spread[2].n.includes("Ace") ? "new beginning" : "culmination"} of the efforts you are putting in now.`;
+                }
+
+                if (revs === 3) {
+                    interpretation += ` <br><br><b>Note:</b> With all three cards reversed, the Oracle suggests this is a "shadow period"—nothing is as it seems on the surface. Focus entirely on inner alignment.`;
+                }
+
+                outcome.innerHTML = `
+                    <div class="outcome-box">
+                        <div class="energy-pills">
+                            <span class="pill" style="background:var(--indigo)">${dominantEl} Dominant</span>
+                            <span class="pill">${revs} Reversed</span>
+                            <span class="pill" style="color:var(--gold)">${signs[1]} Influence</span>
+                        </div>
+                        <span class="outcome-title"><span>✨</span> The Oracle's Proclamation</span>
+                        <p class="outcome-text">${interpretation}</p>
+                    </div>
+                `;
+
                 this.nav('reading');
             },
+
             renderLibrary() {
-                const grid = document.getElementById('library-grid');
-                grid.innerHTML = CARDS.map(c => `
-                    <div style="background:#1c1c1e; border-radius:15px; padding:15px 5px; text-align:center; border:1px solid #333;" onclick="oracle.open('${c.n}','${c.i}','${c.u}','${c.r}',false)">
-                        <div style="font-size:30px; margin-bottom:5px;">${c.i}</div>
-                        <div style="font-size:9px; color:#888; font-weight:800; text-transform:uppercase;">${c.n}</div>
+                const grid = document.getElementById('deck-grid');
+                grid.innerHTML = DECK.map(c => `
+                    <div style="background:#1c1c1e; border-radius:15px; padding:15px 5px; text-align:center; border:1px solid #333;" onclick="oracle.open('${c.n}', '${c.i}', '${c.u.replace(/'/g, "\\'")}', '${c.r.replace(/'/g, "\\'")}', false, '${c.z}')">
+                        <div style="font-size:32px; margin-bottom:5px;">${c.i}</div>
+                        <div style="font-size:10px; color:var(--gold); font-weight:800; text-transform:uppercase;">${c.n}</div>
+                        <div style="font-size:8px; color:#555; text-transform:uppercase; margin-top:4px;">${c.z}</div>
                     </div>
                 `).join('');
             },
-            open(n, i, u, r, isRev) {
-                document.getElementById('sheet-content').innerHTML = `
-                    <div class="orb" style="background:#2c2c2e; margin-bottom:20px;">${i}</div>
-                    <h2 style="margin:0; font-size:24px;">${n}</h2>
-                    <p style="color:var(--gold); font-size:12px; font-weight:900; margin-bottom:25px;">${isRev ? 'REVERSED' : 'UPRIGHT'}</p>
-                    <div style="text-align:left;">
-                        <p style="color:var(--blue); font-size:11px; font-weight:900; margin-bottom:5px;">UPRIGHT</p>
-                        <p style="margin-bottom:20px; font-size:16px;">${u}</p>
-                        <p style="color:#ff3b30; font-size:11px; font-weight:900; margin-bottom:5px;">REVERSED</p>
-                        <p style="font-size:16px;">${r}</p>
+
+            open(n, i, u, r, isRev, z) {
+                const content = document.getElementById('sheet-content');
+                content.innerHTML = `
+                    <div class="orb" style="background:#2c2c2e; margin-bottom:25px; line-height:90px;">${i}</div>
+                    <h2 style="margin: 0 0 5px 0; font-size: 26px; letter-spacing:-1px;">${n}</h2>
+                    <div class="zodiac-tag">${z}</div>
+                    <p style="color:var(--gold); font-size:12px; font-weight:800; margin: 15px 0 25px 0; letter-spacing: 1px;">${isRev ? 'REVERSED' : 'UPRIGHT'}</p>
+                    <div style="text-align: left; padding: 0 10px;">
+                        <p style="color:var(--blue); font-size:11px; font-weight:800; margin-bottom:6px; letter-spacing: 1px;">ORACLE MESSAGE</p>
+                        <p style="margin-bottom: 24px; font-size: 16px; line-height: 1.4; color: #eee;">${isRev ? r : u}</p>
+                        <p style="color:var(--gray); font-size:10px; font-weight:800; margin-bottom:6px; letter-spacing: 1px;">COSMIC SIGNATURE</p>
+                        <p style="font-size: 14px; line-height: 1.4; color: #888;">This card draws its strength from the celestial power of <b>${z}</b>.</p>
                     </div>
                 `;
                 document.getElementById('modal').style.display = 'flex';
                 setTimeout(() => document.getElementById('sheet').classList.add('up'), 10);
             },
+
             close() {
                 document.getElementById('sheet').classList.remove('up');
-                setTimeout(() => document.getElementById('modal').style.display = 'none', 300);
+                setTimeout(() => document.getElementById('modal').style.display = 'none', 350);
             }
         };
 
-        // --- THE IGNITION ---
         window.addEventListener('load', () => {
             oracle.nav('home');
         });
